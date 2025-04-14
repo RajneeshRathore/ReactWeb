@@ -11,6 +11,6 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: process.env.PORT || 5173,
-    allowedHosts: ['potfolio-in.onrender.com'], // Add this line
+    allowedHosts: ['reactweb-3103.onrender.com'], // Add the correct host here
   },
 });
