@@ -8,7 +8,7 @@ import { uploadToCloudinary } from './video.js'; // Ensure the correct path to v
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5000;
 
 // MongoDB Connection URI (replace with your MongoDB Atlas URI or local MongoDB URI)
 const dbURI = process.env.MONGODB_URI;
