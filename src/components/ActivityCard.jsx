@@ -1,14 +1,13 @@
 import React from 'react';
 
-function ActivityCard() {
+function ActivityCard({ videoUrl }) {
   return (
-    <div className='bg-slate-50  rounded-t-lg border m-5 w-lg px-0.4'>
-      <div className='rounded-t-lg w-lg'>
-      <iframe width="510" height="315" src="https://www.youtube.com/embed/2ltGXfmI6mk?si=D3X1kPvVcHhAbmwj" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin"  className='rounded-md'></iframe>
+    <div className="bg-white shadow-lg rounded-lg overflow-hidden m-4 w-80">
+      <video src={videoUrl} controls className="w-full h-48 object-cover" />
+      <div className="p-4">
+        <h2 className="text-lg font-bold mb-2">Activity</h2>
+        <p className="text-gray-700">Enjoy your uploaded activity video!</p>
       </div>
-      <h2 className='text-lg font-semibold mt-5 bg-zinc-500'>
-        <p className='flex flex-wrap px-3 py-2'>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Assumenda, repellendus? Exercitationem maiores, itaque harum nulla rerum dicta corrupti accusamus obcaecati aspernatur tenetur a, aut iure est tempora ullam atque expedita.</p>
-      </h2>
     </div>
   );
 }
