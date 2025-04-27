@@ -3,121 +3,92 @@ import multer from 'multer';
 import cors from 'cors';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
-import { uploadToCloudinary } from './video.js'; // Ensure the correct path to video.js
+import { uploadToCloudinary } from './video.js'; // Adjust if needed
+import path from 'path';
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
 const app = express();
-const port = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5000;
 
-// MongoDB Connection URI (replace with your MongoDB Atlas URI or local MongoDB URI)
-const dbURI = process.env.MONGODB_URI;
+// Connect to MongoDB
+mongoose.connect(process.env.MONGODB_URI)
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
-mongoose.connect(dbURI)
-  .then(() => {
-    console.log("MongoDB connected");
-  })
-  .catch((err) => {
-    console.error("Error connecting to MongoDB:", err);
-  });
-
-// Create the Video schema directly in index.js
+// Video Schema
 const videoSchema = new mongoose.Schema({
-  url: { 
-    type: String, 
-    required: true 
-  },
-  text: { 
-    type: String, 
-    required: false  // Optional text field for video description
-  },
-  createdAt: { 
-    type: Date, 
-    default: Date.now 
-  }
+  url: { type: String, required: true },
+  text: { type: String, required: false },
+  createdAt: { type: Date, default: Date.now }
 });
 
-const Video = mongoose.model('Video', videoSchema); // Create the Video model
+const Video = mongoose.model('Video', videoSchema);
 
-// Middleware
-app.use(cors({
-  origin: 'http://localhost:5173',
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type'],
-}));
-
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Setup multer for file storage
+// Setup multer
 const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadsFolder = './uploads';
-    cb(null, uploadsFolder);
-  },
-  filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
+  destination: (req, file, cb) => cb(null, './uploads'),
+  filename: (req, file, cb) => cb(null, Date.now() + '-' + file.originalname)
 });
-
 const upload = multer({ storage });
 
-// Routes
-app.get('/', (req, res) => {
-  res.send('Welcome to the Cloudinary uploader server!');
-});
+// Enable CORS only in development
+if (process.env.NODE_ENV !== 'production') {
+  app.use(cors({
+    origin: 'http://localhost:5173',
+    methods: ['GET', 'POST'],
+    allowedHeaders: ['Content-Type'],
+  }));
+}
 
-// Upload video
+// Upload route
 app.post('/upload', upload.single('video'), async (req, res) => {
   try {
-    console.log('Received file:', req.file);
+    const localPath = req.file.path;
+    const result = await uploadToCloudinary(localPath);
 
-    // Path to the uploaded file
-    const localFilePath = req.file.path;
+    const newVideo = new Video({
+      url: result.url,
+      text: req.body.text || 'No description'
+    });
 
-    // Upload the file to Cloudinary and get the URL
-    const uploadResult = await uploadToCloudinary(localFilePath);
+    await newVideo.save();
 
-    if (uploadResult) {
-      const videoUrl = uploadResult.url; // Cloudinary URL
-      const videoText = req.body.text || 'No description provided'; // Optional text (description) from the request
-
-      // Save the video URL and text to MongoDB
-      const newVideo = new Video({
-        url: videoUrl,
-        text: videoText,
-      });
-      await newVideo.save();
-
-      console.log('Upload successful:', videoUrl);
-
-      // Respond with the URL of the uploaded video
-      res.status(200).json({
-        message: 'Upload successful',
-        url: videoUrl,
-      });
-    } else {
-      console.log('Upload failed: No result from Cloudinary');
-      res.status(500).json({ message: 'Upload failed' });
-    }
+    res.status(200).json({ message: 'Upload successful', url: result.url });
   } catch (error) {
-    console.error('Error in upload route:', error);
+    console.error('Upload error:', error);
     res.status(500).json({ message: 'Something went wrong' });
   }
 });
 
-// Retrieve all video URLs and text
-app.get('/videos', async (req, res) => {
+// Fetch videos route
+app.get('/videos', async (_, res) => {
   try {
-    const videos = await Video.find(); // Fetch all video URLs and text from MongoDB
-    res.status(200).json(videos); // Serve the array of video URLs and descriptions
+    const videos = await Video.find();
+    res.status(200).json(videos);
   } catch (error) {
-    console.error('Error fetching videos:', error);
+    console.error('Fetching videos error:', error);
     res.status(500).json({ message: 'Failed to retrieve videos' });
   }
 });
 
+// Serve static React frontend
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const clientBuildPath = path.join(__dirname, 'dist');
+
+app.use(express.static(clientBuildPath));
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(clientBuildPath, 'index.html'));
+});
+
 // Start server
-app.listen(port, () => {
-  console.log(`Server is running at http://localhost:${port}`);
+app.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}`);
 });
