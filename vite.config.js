@@ -1,4 +1,3 @@
-// vite.config.js
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -6,9 +5,9 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
-    host: '0.0.0.0',
+    host: true,         // allow any external IP (not just localhost)
     port: 5173,
-    allowedHosts: ['localhost'],
+    allowedHosts: ['.onrender.com'], // Allow all .onrender.com subdomains
     proxy: {
       '/upload': {
         target: 'http://localhost:5000',
