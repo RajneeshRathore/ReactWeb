@@ -34,7 +34,7 @@ function Activity() {
       setUploadMessage('Uploading...');
 
       // Send video to backend for Cloudinary upload
-      const response = await axios.post('http://localhost:3000/upload', formData, {
+      const response = await axios.post('/upload', formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
