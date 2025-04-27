@@ -4,20 +4,22 @@ import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig(({ command }) => ({
   plugins: [react(), tailwindcss()],
-  // Only apply this section when running `vite` (npm run dev)
   ...(command === 'serve' && {
     server: {
       host: '0.0.0.0',
-      port: 5173,                      // fixed dev port
-      allowedHosts: ['localhost'],     // your local dev host
+      port: 5173,
+      // allow the exact host (with and without port)
+      allowedHosts: [
+        'localhost',
+        'reactweb-3103.onrender.com',
+        'reactweb-3103.onrender.com:10000'
+      ],
       proxy: {
-        // redirect /upload → Express on 5000
         '/upload': {
           target: 'http://localhost:5000',
           changeOrigin: true,
           secure: false,
         },
-        // redirect /videos → Express on 5000
         '/videos': {
           target: 'http://localhost:5000',
           changeOrigin: true,
